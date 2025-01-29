@@ -9,9 +9,7 @@ import sys
 import pandas as pd
 pd.options.mode.chained_assignment = None  # default='warn'
 import numpy as np
-import os
 import itertools
-import socket
 from datetime import datetime
 import Pull_Game_Outcomes 
     
@@ -22,16 +20,6 @@ import Pull_Game_Outcomes
  # Define constants
 AVERAGE_GAMES = 7 # Number of games used in moving average (Best so far is 7)
 START_YEAR = 2020 # Starting year of data since the league evolves over time (Best so far is 2020)
-
-# Set directory
-if socket.gethostname() == 'FTILC3VBil7BwCe':
-    file_directory = r"C:\Users\zchodan\OneDrive - Franklin Templeton\Documents\Python\NHL Model"
-elif socket.gethostname() == 'DESKTOP-F6DBMEK':
-    file_directory = r"D:\Users\ZCHODANIECKY\OneDrive - Franklin Templeton\Documents\Python\NHL Model"
-else:
-    file_directory = r"C:\Users\zanec\OneDrive\Documents\Python\NHL Model"
-      
-os.chdir(file_directory)
 
 
 # Update win history file
@@ -44,19 +32,29 @@ df_win_history = pd.read_csv(r'Data\Win_History.csv')
 
 
 # Filter for only relevant columns
-df_filtered = df_original.drop(columns=['name','playerTeam','position','iceTime'])
+columns_to_drop = ['name', 'playerTeam', 'position', 'iceTime']
+df_filtered = df_original.drop(columns=columns_to_drop)
 
-# Keep regular season data starting in given year for all play situations
-df_filtered = df_filtered.query(f"situation == 'all' & playoffGame == 0 & season >= {START_YEAR}")
+# Keep regular season data starting in the given year for all play situations
+df_filtered = df_filtered[
+    (df_filtered['situation'] == 'all') & 
+    (df_filtered['playoffGame'] == 0) & 
+    (df_filtered['season'] >= START_YEAR)
+]
 
-# Sort by date so next step calcs correct
-df_filtered.sort_values(by=['gameDate','team'], ascending= [True, True], inplace=True) 
+# Sort by date and team to ensure correct calculations in the next steps
+df_filtered.sort_values(by=['gameDate', 'team'], ascending=[True, True], inplace=True)
 
-# Drop rows on dates that team did not play
-df_filtered.drop_duplicates(subset=['gameDate','team'], keep='first', inplace=True)
+# Drop rows on dates where a team did not play (keep the first occurrence for each gameDate and team combination)
+df_filtered.drop_duplicates(subset=['gameDate', 'team'], keep='first', inplace=True)
 
 # Merge win history file with game data
-df_initial = pd.merge(df_filtered,df_win_history[['gameId','home_win']], on='gameId', how='left')
+df_initial = pd.merge(
+    df_filtered,
+    df_win_history[['gameId', 'home_win']],
+    on='gameId',
+    how='left'
+)
 
 
 # Create column to determine in the team won or not
@@ -79,36 +77,37 @@ outcomeValues2 = ['WIN','LOSS','TIE']
 df_initial.loc[:,'win_lose_tie'] = np.select(outcomeConditions2,outcomeValues2)  
 
 # Create custom columns
-df_initial.loc[:,'win'] = np.where(df_initial['win_lose_tie'] == 'WIN', 1, 0) 
-df_initial.loc[:,'seasonWin'] = df_initial.groupby(['season','team'])['win'].cumsum(axis=0)
-df_initial.loc[:,'tie'] = np.where(df_initial['win_lose_tie'] == 'TIE', 1, 0)
-df_initial.loc[:,'seasonTie'] = df_initial.groupby(['season','team'])['tie'].cumsum(axis=0)
-df_initial.loc[:,'pointsFromGame'] = np.where(df_initial['win_lose_tie'] == 'WIN', 2,(np.where(df_initial['win_lose_tie'] == 'TIE', 1, 0)))
-df_initial.loc[:,'seasonPointTotal'] = (df_initial['seasonWin'] * 2) + (df_initial['seasonTie'])
-df_initial.loc[:, 'gamesPlayed'] = df_initial.groupby(['season','team']).cumcount() +1
+df_initial['win'] = np.where(df_initial['win_lose_tie'] == 'WIN', 1, 0) 
+df_initial['seasonWin'] = df_initial.groupby(['season','team'])['win'].cumsum(axis=0)
+df_initial['tie'] = np.where(df_initial['win_lose_tie'] == 'TIE', 1, 0)
+df_initial['seasonTie'] = df_initial.groupby(['season','team'])['tie'].cumsum(axis=0)
+df_initial['pointsFromGame'] = np.select([
+    df_initial['win_lose_tie'] == 'WIN',
+    df_initial['win_lose_tie'] == 'TIE'
+], [2, 1], default=0)
+df_initial['seasonPointTotal'] = (df_initial['seasonWin'] * 2) + (df_initial['seasonTie'])
+df_initial[ 'gamesPlayed'] = df_initial.groupby(['season','team']).cumcount() +1
 
 
 # Create custom columns to get Averages for
-df_initial.loc[:,'seasonPointsPerGame'] = df_initial['seasonPointTotal'] / df_initial['gamesPlayed']
+df_initial['seasonPointsPerGame'] = df_initial['seasonPointTotal'] / df_initial['gamesPlayed']
 
 # Drop columns not needed after intial filtering and transforming
-df_initial = df_initial.drop(columns=['home_win','win_lose_tie',
-                                      'playoffGame', 'win','seasonWin','tie','seasonTie','situation','season',
-                                      'seasonPointTotal'
-                                      ])
+columns_to_drop = ['home_win','win_lose_tie','playoffGame', 'win','seasonWin','tie','seasonTie','situation','season','seasonPointTotal']
+df_initial = df_initial.drop(columns=columns_to_drop)
 
 
 # Function: Average stat values for the prior {AVERAGE_GAMES} number of games. Shift to use prior game values.
 def calculate_avg_stats_per_game(df_use, used_col_name, moving_avg_len,shift,EMA):   
     
     if shift == True and EMA == True:
-        df_use.loc[:, used_col_name + 'Avg'] = round(df_use.groupby('team')[used_col_name].transform(lambda x: x.ewm(span=AVERAGE_GAMES,adjust=False).mean(AVERAGE_GAMES).shift().bfill()), 2)
+        df_use.loc[:, used_col_name + 'Avg'] = round(df_use.groupby('team')[used_col_name].transform(lambda x: x.ewm(span=AVERAGE_GAMES,adjust=False).mean().shift().bfill()), 2)
     elif shift == True and EMA == False:
-        df_use.loc[:, used_col_name + 'Avg'] = round(df_use.groupby('team')[used_col_name].transform(lambda x: x.rolling(AVERAGE_GAMES,1).mean(AVERAGE_GAMES).shift().bfill()), 2)
+        df_use.loc[:, used_col_name + 'Avg'] = round(df_use.groupby('team')[used_col_name].transform(lambda x: x.rolling(AVERAGE_GAMES,1).mean().shift().bfill()), 2)
     elif shift == False and EMA == True:
-        df_use.loc[:, used_col_name + 'Avg'] = round(df_use.groupby('team')[used_col_name].transform(lambda x: x.ewm(span=AVERAGE_GAMES,adjust=False).mean(AVERAGE_GAMES)), 2)
+        df_use.loc[:, used_col_name + 'Avg'] = round(df_use.groupby('team')[used_col_name].transform(lambda x: x.ewm(span=AVERAGE_GAMES,adjust=False).mean()), 2)
     elif shift == False and EMA == False:
-        df_use.loc[:, used_col_name + 'Avg'] = round(df_use.groupby('team')[used_col_name].transform(lambda x: x.rolling(AVERAGE_GAMES,1).mean(AVERAGE_GAMES)), 2)
+        df_use.loc[:, used_col_name + 'Avg'] = round(df_use.groupby('team')[used_col_name].transform(lambda x: x.rolling(AVERAGE_GAMES,1).mean()), 2)
     
     
 # Get all columns list and filter out ones we do not want to calculate moving average on
@@ -132,19 +131,28 @@ df_train_data = df_train_data.drop(columns=['gamesPlayed'])
 
    
 # Split into Home and Away tables  
-df_home = df_train_data.query("home_or_away == 'HOME'")
-df_home = df_home.drop(columns=customize_columns, axis=1)
-df_away = df_train_data.query("home_or_away == 'AWAY'")
-df_away = df_away.drop(columns=customize_columns, axis=1)
+# Create separate dataframes for home and away games
+df_home = df_train_data.query("home_or_away == 'HOME'").drop(columns=customize_columns)
+df_away = df_train_data.query("home_or_away == 'AWAY'").drop(columns=customize_columns)
  
 
 ###################################################
 ###            Merge goalie stats               ###
 ###################################################
-df_goalie_stats = pd.read_csv('Goalie_History.csv')
+df_goalie_stats = pd.read_csv(r'Data\Goalie_History.csv')
 
-df_home_goalie_stats = df_goalie_stats.query(f"lastGoalieInNet == 1 & isGoalieTeamHome == 1 & season >= {START_YEAR}")
-df_away_goalie_stats = df_goalie_stats.query(f"lastGoalieInNet == 1 & isGoalieTeamHome == 0 & season >= {START_YEAR}")
+df_home_goalie_stats = df_goalie_stats[
+    (df_goalie_stats['lastGoalieInNet'] == 1) &
+    (df_goalie_stats['isGoalieTeamHome'] == 1) &
+    (df_goalie_stats['season'] >= START_YEAR)
+]
+
+# Filter for away goalie stats
+df_away_goalie_stats = df_goalie_stats[
+    (df_goalie_stats['lastGoalieInNet'] == 1) &
+    (df_goalie_stats['isGoalieTeamHome'] == 0) &
+    (df_goalie_stats['season'] >= START_YEAR)
+]
 
 homeGameCount = df_home_goalie_stats['gameId'].nunique()
 awayGameCount = df_away_goalie_stats['gameId'].nunique()
@@ -384,9 +392,6 @@ df_merged6 = pd.merge(
 )
 
 
-
-
-
 # Discared un-needed fields from Prediction data dataframe
 discard_fields_predict = [
                  'gameId_Home_Home','gameId_Home_Away','gameId_Away_Home','gameId_Away_Away', 
@@ -395,7 +400,6 @@ discard_fields_predict = [
 # Discard un-needed goalie stat fields from training data
 discard_fields_predict.extend(['season_Home','isGoalieTeamHome_Home','lastGoalieInNet_Home','beforeGameSeasonGAA_Home','beforeGameSesaonSavePct_Home',
                              'season_Away','isGoalieTeamHome_Away','lastGoalieInNet_Away','beforeGameSeasonGAA_Away','beforeGameSesaonSavePct_Away'])
-
 
 df_predict_data = df_merged6.drop(columns=discard_fields_predict, axis=1)
 

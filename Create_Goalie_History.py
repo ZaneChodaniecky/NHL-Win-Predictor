@@ -8,21 +8,9 @@ Created on Tue Oct 22 10:51:59 2024
 import pandas as pd
 import numpy as np
 pd.options.mode.chained_assignment = None  # default='warn'
-import os
-import socket
 
-
-if socket.gethostname() == 'zchodani-p-l01':
-    file_directory = r"C:\Users\zchodaniecky\OneDrive - Franklin Templeton\Documents\Python\NHL_data"
-elif socket.gethostname() == 'FTILC3VBil7BwCe':
-    file_directory = r"C:\Users\zchodan\OneDrive - Franklin Templeton\Documents\Python\NHL_data"
-else:
-    file_directory = r"C:\Users\zanec\OneDrive\Documents\Python\NHL_data"
-         
-os.chdir(file_directory)
-
-shotsHistoryPath = 'shots_2015-2023.csv'
-shotsCurrentYearPath = 'shots_2024.csv'
+shotsHistoryPath = r'Data/shots_2015-2023.csv'
+shotsCurrentYearPath = r'Data/shots_2024.csv'
 
 df_shots_history = pd.read_csv(shotsHistoryPath)
 df_shots_current_year = pd.read_csv(shotsCurrentYearPath)
@@ -32,7 +20,6 @@ df_shots_current_year = pd.read_csv(shotsCurrentYearPath)
 keep_columns = ['season','isPlayoffGame','game_id','team','homeTeamCode','awayTeamCode','isHomeTeam','goalieIdForShot','goalieNameForShot',
                 'goal','shotWasOnGoal','time','shotOnEmptyNet'
                 ]
-
 
 # Clean up dataframe
 df_shots_history = df_shots_history[keep_columns].copy()  
@@ -77,8 +64,6 @@ df_last_in_net = df_Combined.query("shotOnEmptyNet == 0 & goalieName.notna()").c
 # Ensure the index is preserved/reset if necessary
 df_last_in_net = df_last_in_net.reset_index(drop=True)
 max_time_indices = df_last_in_net.groupby(['fullGameId', 'goalieTeam'])['time'].idxmax()
-
-df_last_in_net.to_csv('hehe.csv', index=False)
 
 # Create a new DataFrame from the rows with the max 'Time' in each group
 df_max_time_goalies = df_last_in_net.loc[max_time_indices, ['fullGameId', 'goalieTeam', 'goalieId']]
@@ -167,16 +152,6 @@ df_merged['beforeGameSeasonGAA'] = df_merged.groupby(['season', 'goalieId'])['go
 
 
 
-
-
-
-# NOT SURE IF THIS NEXT SECTION IS LOGICAL?
-# Some games have 2 goalies per team because the goalie was pulled. Create a field for avg GAA and Save %
-#df_merged['seasonSavePctAvgForGame'] = df_merged.groupby(['fullGameId','goalieTeam'])['goalieIdSeasonSavePct'].transform('mean')
-#df_merged['seasonGAAAvgForGame'] = df_merged.groupby(['fullGameId','goalieTeam'])['goalieIdSeasonGAA'].transform('mean')
-
-
-
 # Rename fields to match with other data files
 df_merged.rename(columns={'fullGameId':'gameId'}, inplace=True)
 df_merged.rename(columns={'goalieTeam':'team'}, inplace=True)
@@ -184,4 +159,4 @@ df_merged.rename(columns={'goalieTeam':'team'}, inplace=True)
 # Drop fields used to calc goalie averages
 df_merged = df_merged.drop(['totalGameGoals','cumulativeGames','cumulativeGoals','totalShotsOnGoal','cumulativeShotsOnGoal'],axis=1)
 
-df_merged.to_csv('Goalie_History.csv', index=False)
+df_merged.to_csv(r'Data/Goalie_History.csv', index=False)

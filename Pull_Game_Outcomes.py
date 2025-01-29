@@ -15,15 +15,6 @@ import socket
 import requests
 
 def Update_Win_History(winFilePath,dataFilePath):
-
-    if socket.gethostname() == 'FTILC3VBil7BwCe':
-        file_directory = r"C:\Users\zchodan\OneDrive - Franklin Templeton\Documents\Python\NHL Model"
-    elif socket.gethostname() == 'DESKTOP-F6DBMEK':
-        file_directory = r"D:\Users\ZCHODANIECKY\OneDrive - Franklin Templeton\Documents\Python\NHL Model"
-    else:
-        file_directory = r"C:\Users\zanec\OneDrive\Documents\Python\NHL Model"
-             
-    os.chdir(file_directory)
     
     # Open win history sheet and find most recent game
     df_Win_History = pd.read_csv(winFilePath)
@@ -31,9 +22,10 @@ def Update_Win_History(winFilePath,dataFilePath):
     
     # Open game data sheet and find all games after the most recent game in Win History sheet
     df_Game_History = pd.read_csv(dataFilePath)
-    df_Game_History = df_Game_History.query("situation == 'all' & playoffGame == 0")
+    df_Game_History = df_Game_History[(df_Game_History['situation'] == 'all') & (df_Game_History['playoffGame'] == 0)]
     df_Newest_GameIds = df_Game_History[df_Game_History['gameId'] > latest_GameID]
     
+     
     # Convert gameIds to a list and remove duplicates
     unique_GameIds = df_Newest_GameIds['gameId'].unique().tolist()
     
@@ -74,15 +66,6 @@ def Update_Win_History(winFilePath,dataFilePath):
     
     
 def Update_Goalie_Stats(goalieHistoryPath,shotsCurrentYearPath):
-
-    if socket.gethostname() == 'FTILC3VBil7BwCe':
-        file_directory = r"C:\Users\zchodan\OneDrive - Franklin Templeton\Documents\Python\NHL Model"
-    elif socket.gethostname() == 'DESKTOP-F6DBMEK':
-        file_directory = r"D:\Users\ZCHODANIECKY\OneDrive - Franklin Templeton\Documents\Python\NHL Model"
-    else:
-        file_directory = r"C:\Users\zanec\OneDrive\Documents\Python\NHL Model"
-             
-    os.chdir(file_directory)
     
     # Open win history sheet and find most recent gam
     df_goalie_history = pd.read_csv(goalieHistoryPath)
@@ -198,10 +181,6 @@ def Update_Goalie_Stats(goalieHistoryPath,shotsCurrentYearPath):
     df_goalie_update['beforeGameSesaonSavePct'] = df_goalie_update.groupby(['season', 'goalieId'])['goalieIdSeasonSavePct'].shift(1).fillna(df_goalie_history['goalieIdSeasonSavePct'].mean()).astype(float)
     df_goalie_update['beforeGameSeasonGAA'] = df_goalie_update.groupby(['season', 'goalieId'])['goalieIdSeasonGAA'].shift(1).fillna(df_goalie_history['goalieIdSeasonGAA'].mean()).astype(float)
     
-    # NOT SURE IF THIS NEXT SECTION IS LOGICAL?
-    # Some games have 2 goalies per team because the goalie was pulled. Create a field for avg GAA and Save %
-    #df_goalie_update['seasonSavePctAvgForGame'] = df_goalie_update.groupby(['gameId','goalieTeam'])['goalieIdSeasonSavePct'].transform('mean')
-    #df_goalie_update['seasonGAAAvgForGame'] = df_goalie_update.groupby(['gameId','goalieTeam'])['goalieIdSeasonGAA'].transform('mean')
        
     # Rename fields to match with other data files
     df_goalie_update.rename(columns={'gameId':'gameId'}, inplace=True)
