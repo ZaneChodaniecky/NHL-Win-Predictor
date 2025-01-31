@@ -26,6 +26,8 @@ A machine learning model that predicts the outcome of NHL games for the current 
 - At the conclusion of a season, please run the 'NHL Win Classification - PreProcessing.py' a final time to fully populate 'win_history.csv' and 'goalie_history.csv' for the season.
 - The data that is being used is the average statistics for a given feature over the past X games in the current season (set to 7 right now) so early season predictions may have lower accuracy until 7 games in.
 - Odds are sourced from 'the-odds-api.com'. This script contains my API keys, you can generate your own for free if you wish.
+- Team names and abbreviations are hardcoded in the ''NHL Win Classification - PreProcessing.py' and 'nhl_win_classification_xgboost_run' scripts but
+    these are subject to change and may need to be updated. Especially Utah (UTH) which will get a new name for the 2025 season.
 
 ### Prerequisites
 - This project requires Python 3.x and the following libraries:
@@ -45,3 +47,4 @@ Clone the repository and install dependencies:
 git clone https://github.com/ZaneChodaniecky/NHL-Win-Predictor.git
 cd NHL-Win-Predictor
 pip install -r requirements.txt
+python run.py
