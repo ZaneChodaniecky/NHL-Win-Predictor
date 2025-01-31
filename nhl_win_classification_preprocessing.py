@@ -17,14 +17,14 @@ import pull_game_outcomes
 # Game data comes from https://moneypuck.com/data.htm
 # Schedule data comes from https://media.nhl.com/public/news/18238
 
- # Define constants
+# Define constants
 AVERAGE_GAMES = 7 # Number of games used in moving average (Best so far is 7)
 START_YEAR = 2020 # Starting year of data since the league evolves over time (Best so far is 2020)
 
 
 # Update win history file
-#Pull_Game_Outcomes.Pull_Recent_Game_Data('https://moneypuck.com/moneypuck/playerData/careers/gameByGame/all_teams.csv')
-#Pull_Game_Outcomes.Pull_Recent_Shots_Data('https://peter-tanner.com/moneypuck/downloads/shots_2024.zip')
+pull_game_outcomes.Pull_Recent_Game_Data('https://moneypuck.com/moneypuck/playerData/careers/gameByGame/all_teams.csv')
+pull_game_outcomes.Pull_Recent_Shots_Data('https://peter-tanner.com/moneypuck/downloads/shots_2024.zip')
                           
 pull_game_outcomes.Update_Win_History(r'Data\win_history.csv',r'Data\all_teams.csv')
 pull_game_outcomes.Update_Goalie_Stats(r'Data\goalie_history.csv',r'Data\shots_2024.csv')
@@ -412,4 +412,3 @@ df_predict_data = df_predict_data.rename(columns={'goalieIdSeasonGAA_Home': 'bef
 
 # Output transformed prediction data
 df_predict_data.to_csv('Game_Win_Classifier_Predict.csv',index=False)
-

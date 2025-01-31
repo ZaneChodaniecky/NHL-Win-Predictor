@@ -46,7 +46,7 @@ train_path = 'Game_Win_Classifier_Transformed.csv'
 test_path = 'Game_Win_Classifier_Predict.csv'
 target_variable = 'win_or_lose_Home'
 SEED = 69
-skip_hypertuning = True
+skip_hypertuning = False
 
 
 # In[5]:
