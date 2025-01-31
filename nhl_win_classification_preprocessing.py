@@ -275,9 +275,10 @@ def main():
     # Take only the input columns needed from data  
     df_most_recent_game_trimmed = df_merged2.reindex(new_col_list, axis='columns').copy()
       
-    # List of all correct team acronyms
-    team_acronym = ['ANA','BOS','BUF','CAR','CBJ','CGY','CHI','COL','DAL','DET','EDM','FLA','LAK','MIN','MTL',
-                   'NJD','NSH','NYI','NYR','OTT','PHI','PIT','SEA','SJS','STL','TBL','TOR','UTA','VAN','VGK','WPG','WSH']
+    # Load team names
+    df_acronyms = pd.read_csv('Data/team_abbreviations.csv', encoding="ISO-8859-1")  
+    team_acronym = df_acronyms['Short_Name'].to_list()
+
     
     # Current day games   [AWAY, HOME]
     #current_slate =  [('MTL','DET'),('BUF','TBL'),('NYI','NJD'),('NSH','PIT')]
