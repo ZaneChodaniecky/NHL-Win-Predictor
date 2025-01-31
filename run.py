@@ -6,11 +6,9 @@ Created on Thu Jan 30 19:38:13 2025
 """
 
 import os
-import subprocess
 import create_shots_history
 import nhl_win_classification_preprocessing
-
-import os
+import nhl_win_classification_xgboost_run
 
 
 if os.path.exists("Data/shots_history.csv"):
@@ -20,6 +18,6 @@ else:
     create_shots_history.main()
 
 print('Run data pre-processing')
-import nhl_win_classification_preprocessing
+nhl_win_classification_preprocessing.main()
 print('Begin prediction model')
-import nhl_win_classification_xgboost_run
+nhl_win_classification_xgboost_run.main()
