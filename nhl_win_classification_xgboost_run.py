@@ -398,11 +398,11 @@ def main():
         # Create dataframe with games, predictions, and odds
         odds_dict = dict(zip(teams_list,odds_list))
 
-    df_results['Home_Odds'] = df_results['Home_Name'].map(odds_dict)
-    df_results['Away_Odds'] = df_results['Away_Name'].map(odds_dict)
-
-    df_results.to_csv('game_predictions.csv', index=False)
-    df_results.head(df_results.shape[0])
+        df_results['Home_Odds'] = df_results['Home_Name'].map(odds_dict)
+        df_results['Away_Odds'] = df_results['Away_Name'].map(odds_dict)
+    
+        df_results.to_csv('game_predictions.csv', index=False)
+        df_results.head(df_results.shape[0])
 
 
 # Prevent code from running when the module is imported
