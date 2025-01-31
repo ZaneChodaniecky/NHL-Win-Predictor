@@ -400,7 +400,8 @@ def main():
 
         df_results['Home_Odds'] = df_results['Home_Name'].map(odds_dict)
         df_results['Away_Odds'] = df_results['Away_Name'].map(odds_dict)
-    
+        
+        print('Results have printed to game_preditctions.csv')
         df_results.to_csv('game_predictions.csv', index=False)
         df_results.head(df_results.shape[0])
 
