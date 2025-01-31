@@ -17,6 +17,7 @@ A machine learning model that predicts the outcome of NHL games for the current 
 - shots_history.csv : Created using 'Create Shots History.py'. Script will need to be updated with new year file links for future seasons. Sourced from https://moneypuck.com/data.htm
 - win_history.csv : File provided here has data through 1/28/2025 and is appended with new data when preprocessing script is run. Pulled from official NHL api https://api-web.nhle.com/v1/wsc/game-story/
 - goalie_history.csv : File provided had data through 1/28/2025 and is appended with new data when preprocessing script is run. Calculated from shots_YYYY.csv
+- team_abbreviations.csv : This will need to be updated if a new team is added to the league. Also will need to be updated in 2025 when Utah selects a permanent team name.
 
 ### Notes Users
 - This is created for 2024 season
@@ -26,8 +27,7 @@ A machine learning model that predicts the outcome of NHL games for the current 
 - At the conclusion of a season, please run the 'NHL Win Classification - PreProcessing.py' a final time to fully populate 'win_history.csv' and 'goalie_history.csv' for the season.
 - The data that is being used is the average statistics for a given feature over the past X games in the current season (set to 7 right now) so early season predictions may have lower accuracy until 7 games in.
 - Odds are sourced from 'the-odds-api.com'. This script contains my API keys, you can generate your own for free if you wish.
-- Team names and abbreviations are hardcoded in the ''NHL Win Classification - PreProcessing.py' and 'nhl_win_classification_xgboost_run' scripts but
-    these are subject to change and may need to be updated. Especially Utah (UTH) which will get a new name for the 2025 season.
+  
 
 ### Prerequisites
 - This project requires Python 3.x and the following libraries:
@@ -36,6 +36,8 @@ A machine learning model that predicts the outcome of NHL games for the current 
 - numpy>=1.24.3
 - pandas>=2.0.3
 - requests>=2.31.0
+- scikit-learn>=1.5.2
+- scikit-optimize>=0.10.2
 - seaborn>=0.12.2
 - statsmodels>=0.14.4
 - xgboost>=2.1.3
