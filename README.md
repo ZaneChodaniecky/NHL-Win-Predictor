@@ -35,6 +35,7 @@ A machine learning model that predicts the outcome of NHL games for the current 
 - pandas>=2.0.3
 - requests>=2.31.0
 - seaborn>=0.12.2
+- statsmodels>=0.14.4
 - xgboost>=2.1.3
 
 ### Setup
